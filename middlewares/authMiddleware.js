@@ -1,21 +1,25 @@
+// middlewares/authMiddleware.js
 const jwt = require('jsonwebtoken');
 
+exports.verifyToken = (req, res, next) => {
+  const token = req.header('Authorization');
+  if (!token) {
+    return res.status(401).json({ message: "Access denied. No token provided." });
+  }
 
-const isAuthenticated = (req, res, next) => {
-    const token = req.header('x_auth_token');
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // Attach decoded token data to req.user
+    next();
+  } catch (error) {
+    res.status(400).json({ message: "Invalid token." });
+  }
+};
 
-    if (token) {
-        try {
-            const decodedToken = jwt.verify(token, process.env.SECRET)
-            req.user = decodedToken;
-            next();
-        } catch (error) {
-            return res.status(401).json({ message: 'user not authenticated' })
-        }
-    }
-    else {
-        return res.status(401).json({ message: 'user not authenticated.' })
-    }
-}
-
-module.exports = { isAuthenticated };
+// Middleware to check if user is an admin
+exports.verifyAdmin = (req, res, next) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: "Access denied. Admins only." });
+  }
+  next();
+};
