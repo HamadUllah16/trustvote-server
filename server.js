@@ -37,8 +37,14 @@ app.use('/api/user', userRoutes)
 app.use('/api/admin', adminRoutes);
 
 const PORT = process.env.PORT || 3000;
+
 app.listen((PORT), () => {
     console.log(`Listening to ${PORT}`)
+})
+
+app.get('*', (req, res) => {
+    console.log('Server up!')
+    res.status(200).json({ message: 'Server up' })
 })
 
 module.exports = app;
