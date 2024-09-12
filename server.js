@@ -22,7 +22,7 @@ connectDb()
 
 // Middleware setup
 app.use(express.json());
-app.use(cors({ origin: '*' }));
+app.use(cors({ origin: process.env.CLIENT_URL }));
 app.use(morgan('dev'));
 
 app.use(express.json({ limit: '20mb' }))
