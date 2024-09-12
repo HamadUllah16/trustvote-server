@@ -5,14 +5,11 @@ const cors = require('cors');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
 const swaggerUi = require('swagger-ui-express');
-
-
-// Candidate-related routes
-const candidateRegisterRoutes = require('./routes/CandidateRoutes/registerCandidate');
-const candidateProfileRoutes = require('./routes/CandidateRoutes/profileCompletion');
-const returnCandidateRoutes = require('./routes/CandidateRoutes/returnCandidate');
-const loginCandidateRoutes = require('./routes/CandidateRoutes/loginCandidate');
-const adminRoutes = require('./routes/AdminRoutes/adminRoutes');
+const userRoutes = require('./routes/userRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const candidateRoutes = require('./routes/candidateRoutes');
+const authRoutes = require('./routes/authRoutes')
+const connectDb = require('./config/database');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -20,51 +17,28 @@ dotenv.config();
 // Create an instance of Express
 const app = express();
 
+// Connect to MongoDB
+connectDb()
+
 // Middleware setup
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: '*' }));
 app.use(morgan('dev'));
 
+app.use(express.json({ limit: '20mb' }))
+
+// Authentication routes
+app.use('/api/auth', authRoutes)
 // Candidate routes
-app.use('/api/candidates/register', (req, res, next) => {
-    console.log('Received request at /api/candidates/register');
-    next();
-}, candidateRegisterRoutes);
+app.use('/api/candidate', candidateRoutes)
+// User routes
+app.use('/api/user', userRoutes)
+// Admin routes
+app.use('/api/admin', adminRoutes);
 
-app.use('/api/candidates/profile', (req, res, next) => {
-    console.log('Received request at /api/candidates/profile');
-    next();
-}, candidateProfileRoutes);
-
-app.use('/api/candidates/get', (req, res, next) => {
-    console.log('Received request at /api/candidates/get');
-    next();
-}, returnCandidateRoutes);
-
-app.use('/api/candidate/login', (req, res, next) => {
-    console.log('Received request at /api/candidate/login');
-    next();
-}, loginCandidateRoutes);
-
-app.use('/api/admin',(req, res, next)=>{
-    console.log('Received request at /api/admin');
-    next();
-}, adminRoutes);
-
-// Connect to MongoDB
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI;
-
-mongoose.connect(MONGO_URI)
-    .then(() => {
-        console.log('Connected to MongoDB');
-        // Start the server
-        app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
-        });
-    })
-    .catch(err => {
-        console.error('Failed to connect to MongoDB', err);
-    });
+app.listen((PORT), () => {
+    console.log(`Listening to ${PORT}`)
+})
 
 module.exports = app;

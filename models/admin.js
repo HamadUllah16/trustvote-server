@@ -1,8 +1,14 @@
 // models/admin.js
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 const adminSchema = new mongoose.Schema({
+  firstName: {
+    type: String,
+  },
+  lastName: {
+    type: String
+  },
   username: {
     type: String,
     required: true,

@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
 const UserSchema = new mongoose.Schema({
+    role: {
+        type: String,
+        required: false
+    },
     firstName: {
         type: String,
         unique: false,
@@ -51,10 +55,11 @@ UserSchema.pre('save', function (next) {
 
     // Check if all required fields for profile completion are present
     if (
+        user.role &&
         user.firstName &&
         user.lastName &&
         user.email &&
-        // user.password &&
+        user.password &&
         user.phone &&
         user.cnic &&
         user.dateOfBirth &&

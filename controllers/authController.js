@@ -6,7 +6,7 @@ const bcrypt = require('bcrypt');
 
 const createToken = (id) => {
     return jwt.sign(
-        { id }, process.env.SECRET, { expiresIn: '5d' }
+        { id }, process.env.JWT_SECRET, { expiresIn: '5d' }
     );
 }
 
@@ -49,7 +49,7 @@ const registerUser = async (req, res) => {
     }
 
     if (!validator.isEmail(email)) {
-        throw Error('Invalid Email.')
+        throw Error('Invalid Email - Validator.')
     }
 
     // if (!validator.isStrongPassword(password)) {
@@ -66,7 +66,7 @@ const registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hash = await bcrypt.hash(password, salt);
 
-        await User.create({ email, password: hash, phone: null, cnicBack: null, cnicFront: null });
+        await User.create({ role: 'voter', email, password: hash, phone: null, cnicBack: null, cnicFront: null });
 
         return res.status(200).json({ message: 'User registered successfully.' });
 

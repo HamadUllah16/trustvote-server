@@ -15,7 +15,6 @@ async function userLogout(req, res, next) {
     }
 }
 
-
 const updateUserProfile = async (req, res) => {
     const { firstName, lastName, email, cnic, dateOfBirth, phone, cnicFront, cnicBack } = req.body;
     const { id } = req.user;

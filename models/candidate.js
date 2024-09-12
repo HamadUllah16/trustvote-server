@@ -1,22 +1,24 @@
-// models/candidate.js
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const mongoose = require("mongoose");
 
-// Candidate Schema
-const candidateSchema = new mongoose.Schema({
+const CandidateSchema = new mongoose.Schema({
+    role: {
+        type: String,
+        required: false
+    },
     firstName: {
         type: String,
-        required: false, // Not required at initial registration
+        unique: false,
+        required: false,
     },
     lastName: {
         type: String,
-        required: false, // Not required at initial registration
+        unique: false,
+        required: false,
     },
     email: {
         type: String,
         unique: true,
-        required: true,
-        match: [/.+@.+\..+/, "Please enter a valid email address"]
+        required: true
     },
     password: {
         type: String,
@@ -26,11 +28,9 @@ const candidateSchema = new mongoose.Schema({
         type: String,
         required: false,
     },
-    cnic: {
+    cnicNumber: {
         type: String,
-        required: false, 
-        unique: true,
-        default: null 
+        required: false,
     },
     dateOfBirth: {
         type: String,
@@ -44,7 +44,15 @@ const candidateSchema = new mongoose.Schema({
         type: String,
         required: false
     },
-    manifesto: {
+    gender: {
+        type: String,
+        required: false
+    },
+    constituencyType: {
+        type: String,
+        required: false
+    },
+    constituency: {
         type: String,
         required: false
     },
@@ -52,35 +60,59 @@ const candidateSchema = new mongoose.Schema({
         type: String,
         required: false
     },
-    voteCount: {
-        type: Number,
-        default: 0
+    manifesto: {
+        type: String,
+        required: false
     },
-    approved: {
+    educationalCertificates: {
+        type: String,
+        required: false
+    },
+    assetDeclaration: {
+        type: String,
+        required: false
+    },
+    codeOfConduct: {
         type: Boolean,
-        default: false
+        required: false
     },
+
     profileCompletion: {
         type: Boolean,
-        default: false
-    },
-    publicKey: {
-        type: String,
-        required: false,
-        unique: false
+        required: false
     }
-},{
-  timestamps: true
-});
+})
 
-// Pre-save middleware to hash the password before saving
-candidateSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) {
-        return next();
+CandidateSchema.pre('save', function (next) {
+    const candidate = this;
+
+    // Check if all required fields for profile completion are present
+    if (
+        candidate.role &&
+        candidate.firstName &&
+        candidate.lastName &&
+        candidate.email &&
+        candidate.phone &&
+        candidate.password &&
+        candidate.cnicNumber &&
+        candidate.dateOfBirth &&
+        candidate.gender &&
+        candidate.constituencyType &&
+        candidate.constituency &&
+        candidate.partyAffiliation &&
+        candidate.manifesto &&
+        candidate.cnicFront &&
+        candidate.cnicBack &&
+        candidate.educationalCertificates &&
+        candidate.assetDeclaration &&
+        candidate.codeOfConduct
+    ) {
+        candidate.profileCompletion = true;
+    } else {
+        candidate.profileCompletion = false;
     }
-    this.password = await bcrypt.hash(this.password, 10);
+
     next();
 });
 
-
-module.exports = mongoose.model('Candidate', candidateSchema);
+module.exports = mongoose.model('Candidate', CandidateSchema)

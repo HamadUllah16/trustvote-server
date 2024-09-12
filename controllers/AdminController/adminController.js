@@ -1,8 +1,8 @@
 // controllers/AdminController/admin.js
 const Admin = require('../../models/admin');
-const Candidate = require('../../models/candidate');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
+const Candidate = require('../../models/Candidate');
 
 // Admin login function
 exports.adminLogin = async (req, res) => {
@@ -21,7 +21,7 @@ exports.adminLogin = async (req, res) => {
     const token = jwt.sign(
       { id: admin._id, role: 'admin' },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '5d' }
     );
 
     res.status(200).json({ token, admin: { id: admin._id, email: admin.email } });
