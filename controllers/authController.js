@@ -4,9 +4,9 @@ const validator = require('validator');
 const bcrypt = require('bcrypt');
 
 
-const createToken = (id) => {
+const createToken = (id, role) => {
     return jwt.sign(
-        { id }, process.env.JWT_SECRET, { expiresIn: '5d' }
+        { id, role }, process.env.JWT_SECRET, { expiresIn: '5d' }
     );
 }
 
@@ -31,7 +31,7 @@ const loginUser = async (req, res) => {
 
         console.log('success')
 
-        const token = createToken(user._id);
+        const token = createToken(user._id, user.role);
 
         return res.status(200).json({ message: 'Logged In', x_auth_token: token });
 

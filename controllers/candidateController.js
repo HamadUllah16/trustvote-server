@@ -126,7 +126,8 @@ exports.registerCandidate = async (req, res) => {
             assetDeclaration: null,
             codeOfConduct: false,
 
-            profileCompletion: false
+            profileCompletion: false,
+            approved: false
         });
 
         // Save the candidate to the database

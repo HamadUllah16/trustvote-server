@@ -80,6 +80,10 @@ const CandidateSchema = new mongoose.Schema({
     profileCompletion: {
         type: Boolean,
         required: false
+    },
+    approved: {
+        type: Boolean,
+        required: false
     }
 })
 

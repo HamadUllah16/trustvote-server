@@ -10,6 +10,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const candidateRoutes = require('./routes/candidateRoutes');
 const authRoutes = require('./routes/authRoutes')
 const connectDb = require('./config/database');
+const Candidate = require('./models/Candidate');
 
 // Load environment variables from .env file
 dotenv.config();
