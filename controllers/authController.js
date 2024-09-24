@@ -33,7 +33,7 @@ const loginUser = async (req, res) => {
 
         const token = createToken(user._id, user.role);
 
-        return res.status(200).json({ message: 'Logged In', x_auth_token: token });
+        return res.status(200).json({ message: 'Logged In', x_auth_token: token, role: 'voter' });
 
     } catch (err) {
         return res.status(500).json({ error: err.message });

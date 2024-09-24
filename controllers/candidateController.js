@@ -127,7 +127,7 @@ exports.registerCandidate = async (req, res) => {
             codeOfConduct: false,
 
             profileCompletion: false,
-            approved: false
+            status: 'pending'
         });
 
         // Save the candidate to the database

@@ -24,7 +24,7 @@ exports.adminLogin = async (req, res) => {
       { expiresIn: '5d' }
     );
 
-    res.status(200).json({ token, admin: { id: admin._id, email: admin.email } });
+    res.status(200).json({ token, id: admin._id, email: admin.email, role: 'admin' });
   } catch (error) {
     console.error("Error logging in admin:", error);
     res.status(500).json({ message: "Internal server error." });
@@ -36,7 +36,7 @@ exports.adminProfile = async (req, res) => {
   const { id } = req.user;
   try {
     if (id) {
-      const admin = await Admin.findById(id, { password: 0 }); // Add await here
+      const admin = await Admin.findById(id, { password: 0, createdAt: 0, updatedAt: 0 });
       if (!admin) {
         return res.status(401).json({ message: 'Admin not found.' });
       }
@@ -50,11 +50,20 @@ exports.adminProfile = async (req, res) => {
     res.status(500).json({ error: 'An error occurred while fetching the admin profile.' }); // Better error message
   }
 };
+exports.getApprovedCandidates = async (req, res) => {
+  try {
+    const candidates = await Candidate.find({ profileCompletion: true, status: 'approved' }, { password: 0, createdAt: 0, updatedAt: 0 })
+    res.status(200).json({ candidates, message: 'Approved candidates fetched.' })
+  } catch (error) {
+    console.error('Error getting approved candidates.', error)
+    res.status(500).json({ message: 'Internal server error', error })
+  }
+}
 
 // Function to get all candidates who have completed their profiles but are not yet approved
 exports.getPendingCandidates = async (req, res) => {
   try {
-    const candidates = await Candidate.find({ profileCompletion: true, approved: false });
+    const candidates = await Candidate.find({ profileCompletion: true, status: 'pending' }, { password: 0, createdAt: 0, updatedAt: 0 });
     res.status(200).json({ message: 'Pending Candidates fetched', data: candidates });
   } catch (error) {
     console.error("Error fetching candidates:", error);
@@ -65,7 +74,7 @@ exports.getPendingCandidates = async (req, res) => {
 // Function to approve or reject a candidate
 exports.approveOrRejectCandidate = async (req, res) => {
   const { candidateId } = req.params;
-  const { approved } = req.body; // `approved` should be true for approval, false for rejection
+  const { status } = req.body;
 
   try {
     const candidate = await Candidate.findById(candidateId);
@@ -73,10 +82,10 @@ exports.approveOrRejectCandidate = async (req, res) => {
       return res.status(404).json({ message: "Candidate not found." });
     }
 
-    candidate.approved = approved;
+    candidate.status = status;
     await candidate.save();
 
-    res.status(200).json({ message: approved ? "Candidate approved." : "Candidate rejected.", candidate });
+    res.status(200).json({ message: status, candidate });
   } catch (error) {
     console.error("Error updating candidate approval status:", error);
     res.status(500).json({ message: "Internal server error." });
