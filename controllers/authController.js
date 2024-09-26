@@ -14,19 +14,16 @@ const loginUser = async (req, res) => {
     try {
         console.log('/login');
         const { email, password } = req.body;
-
-        console.log(email, password)
-
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(400).json({ error: 'Invalid email.' });
+            return res.status(400).json({ message: 'Invalid email.' });
         }
 
         const passCheck = await bcrypt.compare(password, user.password);
 
         if (!passCheck) {
-            return res.status(400).json({ error: 'Invalid password.' });
+            return res.status(400).json({ message: 'Invalid password.' });
         }
 
         console.log('success')
@@ -39,6 +36,25 @@ const loginUser = async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 }
+const loginUserEmailCheck = async (req, res) => {
+    try {
+        console.log('/login/email-check');
+        const { email } = req.body;
+        console.log(email);
+
+        const exists = await User.findOne({ email });
+
+        if (!exists) {
+            return res.status(400).json({ message: 'Email does not exist.', exists: false });
+        }
+
+        // Only reach here if the email exists
+        return res.status(200).json({ message: 'Email exists', exists: true });
+    } catch (error) {
+        console.error(error); // Helpful for debugging server errors
+        return res.status(500).json({ message: 'Internal Server Error', error });
+    }
+};
 
 
 const registerUser = async (req, res) => {
@@ -78,4 +94,4 @@ const registerUser = async (req, res) => {
 }
 
 
-module.exports = { loginUser, registerUser }
+module.exports = { loginUser, registerUser, loginUserEmailCheck }
