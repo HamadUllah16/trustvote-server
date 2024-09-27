@@ -11,6 +11,7 @@ const candidateRoutes = require('./routes/candidateRoutes');
 const authRoutes = require('./routes/authRoutes')
 const connectDb = require('./config/database');
 const Candidate = require('./models/Candidate');
+const Admin = require('./models/Admin');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -27,6 +28,7 @@ app.use(cors({ origin: process.env.CLIENT_URL }));
 app.use(morgan('dev'));
 
 app.use(express.json({ limit: '20mb' }))
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Authentication routes
 app.use('/api/auth', authRoutes)
@@ -43,7 +45,8 @@ app.listen((PORT), () => {
     console.log(`Listening to ${PORT}`)
 })
 
-app.get('*', (req, res) => {
+
+app.get('/', (req, res) => {
     console.log('Server up!')
     res.status(200).json({ message: 'Server up' })
 })

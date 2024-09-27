@@ -81,8 +81,8 @@ const CandidateSchema = new mongoose.Schema({
         type: Boolean,
         required: false
     },
-    approved: {
-        type: Boolean,
+    status: {
+        type: String,
         required: false
     }
 })
