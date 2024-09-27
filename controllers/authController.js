@@ -2,6 +2,8 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const validator = require('validator');
 const bcrypt = require('bcrypt');
+const Candidate = require('../models/Candidate');
+const Admin = require('../models/Admin');
 
 
 const createToken = (id, role) => {
@@ -39,17 +41,39 @@ const loginUser = async (req, res) => {
 const loginUserEmailCheck = async (req, res) => {
     try {
         console.log('/login/email-check');
-        const { email } = req.body;
+        const { email, role } = req.body;
         console.log(email);
 
-        const exists = await User.findOne({ email });
+        if (role === 'voter') {
 
-        if (!exists) {
-            return res.status(400).json({ message: 'Email does not exist.', exists: false });
+            const exists = await User.findOne({ email });
+            if (!exists) {
+                return res.status(400).json({ message: 'Email does not exist.', exists: false });
+            }
+            // Only reach here if the email exists
+            return res.status(200).json({ message: 'Email exists', exists: true });
         }
 
-        // Only reach here if the email exists
-        return res.status(200).json({ message: 'Email exists', exists: true });
+        if (role === 'candidate') {
+
+            const exists = await Candidate.findOne({ email });
+            if (!exists) {
+                return res.status(400).json({ message: 'Email does not exist.', exists: false });
+            }
+            // Only reach here if the email exists
+            return res.status(200).json({ message: 'Email exists', exists: true });
+        }
+
+        if (role === 'admin') {
+
+            const exists = await Admin.findOne({ email });
+            if (!exists) {
+                return res.status(400).json({ message: 'Email does not exist.', exists: false });
+            }
+            // Only reach here if the email exists
+            return res.status(200).json({ message: 'Email exists', exists: true });
+        }
+
     } catch (error) {
         console.error(error); // Helpful for debugging server errors
         return res.status(500).json({ message: 'Internal Server Error', error });
