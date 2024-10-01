@@ -1,6 +1,7 @@
 const Candidate = require('../models/Candidate');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const { fileUpload } = require('../utils/cloudinary');
 
 // Login Candidate
 exports.loginCandidate = async (req, res) => {
@@ -62,7 +63,7 @@ exports.getCandidateProfile = async (req, res) => {
 exports.completeCandidateProfile = async (req, res) => {
     const { id } = req.user;
     console.log('completeCandidateProfile controller invoked');
-    const completeData = req.body;
+    const { firstName, lastName, phone, dateOfBirth, gender, cnicNumber, constituencyType, constituency, partyAffiliation, codeOfConduct } = req.body;
 
     console.log('Request params:', req.params);
     console.log('Request body:', req.body);
@@ -76,9 +77,31 @@ exports.completeCandidateProfile = async (req, res) => {
             return res.status(404).json({ message: "Candidate not found." });
         }
 
-        Object.keys(completeData).forEach(key => {
-            candidate[key] = completeData[key];
-        })
+        // upload the files to cloudinary and get link
+        const cnicFront = await fileUpload(req.files?.cnicFront[0]?.path, 'image');
+        const cnicBack = await fileUpload(req.files?.cnicBack[0]?.path, 'image')
+        const manifesto = await fileUpload(req.files?.manifesto[0]?.path, 'raw');
+        const educationalCertificates = await fileUpload(req.files?.educationalCertificates[0]?.path, 'raw');
+        const assetDeclaration = await fileUpload(req.files?.assetDeclaration[0]?.path, 'raw');
+
+        candidate.firstName = firstName;
+        candidate.lastName = lastName;
+        candidate.phone = phone;
+        candidate.dateOfBirth = dateOfBirth;
+        candidate.gender = gender;
+        candidate.cnicNumber = cnicNumber;
+        candidate.constituencyType = constituencyType;
+        candidate.constituency = constituency;
+        candidate.partyAffiliation = partyAffiliation;
+        candidate.codeOfConduct = codeOfConduct;
+        candidate.cnicFront = cnicFront;
+        candidate.cnicBack = cnicBack;
+        candidate.manifesto = manifesto;
+        candidate.educationalCertificates = educationalCertificates;
+        candidate.assetDeclaration = assetDeclaration;
+        // Object.keys(completeData).forEach(key => {
+        //     candidate[key] = completeData[key];
+        // })
 
         console.log('Attempting to save the candidate...');
         await candidate.save();
