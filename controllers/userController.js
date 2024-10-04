@@ -3,6 +3,7 @@ const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const constants = require('../config/constants');
+const { fileUpload } = require('../utils/cloudinary');
 
 async function userLogout(req, res, next) {
     const token = req.headers[constants.tokenHeaderKey];
@@ -16,7 +17,8 @@ async function userLogout(req, res, next) {
 }
 
 const updateUserProfile = async (req, res) => {
-    const { firstName, lastName, email, cnic, dateOfBirth, phone, cnicFront, cnicBack } = req.body;
+    const { firstName, lastName, email, cnic, dateOfBirth, phone } = req.body;
+
     const { id } = req.user;
 
     try {
@@ -25,6 +27,9 @@ const updateUserProfile = async (req, res) => {
             if (!user) {
                 return res.status(401).json({ msgCode: '1001' })
             }
+            const cnicFront = await fileUpload(req.files?.cnicFront[0]?.path, 'image');
+            const cnicBack = await fileUpload(req.files?.cnicBack[0]?.path, 'image');
+
             user.firstName = firstName;
             user.lastName = lastName;
             user.cnic = cnic;

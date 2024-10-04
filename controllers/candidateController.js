@@ -167,7 +167,7 @@ exports.registerCandidate = async (req, res) => {
 exports.getAllCandidates = async (req, res) => {
     console.log('/getAllCandidates invoked')
     try {
-        const allCandidates = await Candidate.find({}, { password: 0, cnicBack: 0, cnicFront: 0, cnicNumber: 0, educationalCertificates: 0, assetDeclaration: 0 })
+        const allCandidates = await Candidate.find({}, { password: 0, cnicBack: 0, cnicFront: 0, cnicNumber: 0, assetDeclaration: 0 })
 
         if (allCandidates.length === 0) {
             return res.status(400).json({ message: "No candidates found." })

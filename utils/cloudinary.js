@@ -11,7 +11,7 @@ cloundinary.config({
 
 
 exports.fileUpload = async (localFilePath, fileType) => {
-    console.log('file upload accessed.')
+    console.log('Cloudinary: file upload accessed.')
     try {
         if (!localFilePath) {
             console.log('Invalid path');
