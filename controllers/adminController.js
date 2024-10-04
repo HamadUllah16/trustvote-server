@@ -26,9 +26,9 @@ exports.adminLogin = async (req, res) => {
       return res.status(404).json({ message: "Admin not found." });
     }
 
-    const isMatch = await bcrypt.compare(password, admin.password);
+    // const isMatch = await bcrypt.compare(password, admin.password);
     console.log(password, admin.password)
-    if (!isMatch) {
+    if (password !== admin.password) {
       return res.status(400).json({ message: "Invalid credentials." });
     }
 
