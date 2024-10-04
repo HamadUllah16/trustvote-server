@@ -26,7 +26,7 @@ connectDb()
 // Middleware setup
 app.use(express.json());
 app.use(morgan('dev'));
-const allowedOrigins = [process.env.CLIENT_URL];
+const allowedOrigins = [process.env.CLIENT_URL, 'http://localhost:3001'];
 
 app.use(cors({
     origin: (origin, callback) => {

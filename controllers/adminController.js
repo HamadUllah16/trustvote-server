@@ -11,10 +11,9 @@ exports.createAdmin = async () => {
 
   if (!exists) {
     console.log('Admin profile do not exists, creating automatically.');
-    const password = await bcrypt.hash('admin', await bcrypt.genSalt(10));
-    const admin = await Admin.create({ email: 'admin@gmail.com', username: 'admin', password });
+    const admin = await Admin.create({ email: 'admin@gmail.com', username: 'admin', password: 'admin' });
 
-    console.log('Admin created, Email: admin@gmail.com, Password: admin')
+    console.log('Admin created, Email: admin@gmail.com, Password: admin', admin)
   }
 }
 
@@ -28,6 +27,7 @@ exports.adminLogin = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, admin.password);
+    console.log(password, admin.password)
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials." });
     }
