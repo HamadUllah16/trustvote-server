@@ -4,6 +4,8 @@ const router = express.Router();
 const { adminLogin, getPendingCandidates, approveOrRejectCandidate, adminProfile, } = require('../controllers/adminController');
 const { verifyToken, verifyAdmin } = require('../middlewares/authMiddleware');
 const { createPoliticalParty, allPoliticalParties } = require('../controllers/politicalPartyController');
+const Admin = require('../models/Admin');
+
 
 // Admin login route
 router.post('/login', adminLogin);

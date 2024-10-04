@@ -12,6 +12,7 @@ const authRoutes = require('./routes/authRoutes')
 const connectDb = require('./config/database');
 const Candidate = require('./models/Candidate');
 const Admin = require('./models/Admin');
+const { createAdmin } = require('./controllers/adminController');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -41,6 +42,9 @@ app.use(cors({
 app.use(express.json({ limit: '20mb' }))
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
+//create default admin if not exists
+createAdmin();
+
 // Authentication routes
 app.use('/api/auth', authRoutes)
 // Candidate routes
@@ -55,7 +59,6 @@ const PORT = process.env.PORT || 3000;
 app.listen((PORT), () => {
     console.log(`Listening to ${PORT}`)
 })
-
 
 app.get('/', (req, res) => {
     console.log('Server up!')

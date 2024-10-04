@@ -4,6 +4,20 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const Candidate = require('../models/Candidate');
 
+exports.createAdmin = async () => {
+  console.log('/createAdmin accessed');
+
+  const exists = await Admin.findOne({ email: "admin@gmail.com" });
+
+  if (!exists) {
+    console.log('Admin profile do not exists, creating automatically.');
+    const password = await bcrypt.hash('admin', await bcrypt.genSalt(10));
+    const admin = await Admin.create({ email: 'admin@gmail.com', username: 'admin', password });
+
+    console.log('Admin created, Email: admin@gmail.com, Password: admin')
+  }
+}
+
 // Admin login function
 exports.adminLogin = async (req, res) => {
   const { email, password } = req.body;
