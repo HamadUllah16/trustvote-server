@@ -11,7 +11,7 @@ exports.createAdmin = async () => {
 
   if (!exists) {
     console.log('Admin profile do not exists, creating automatically.');
-    const admin = await Admin.create({ email: 'admin@gmail.com', username: 'admin', password: 'admin' });
+    const admin = await Admin.create({ email: 'admin@gmail.com', username: 'admin', password: 'admin', role: 'admin' });
 
     console.log('Admin created, Email: admin@gmail.com, Password: admin', admin)
   }
