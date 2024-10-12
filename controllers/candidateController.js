@@ -136,7 +136,7 @@ exports.registerCandidate = async (req, res) => {
             firstName: '',
             lastName: '',
             phone: '',
-            cnicNumber: '',
+            cnicNumber: null,
             dateOfBirth: '',
             gender: '',
             constituencyType: '',
