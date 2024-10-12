@@ -31,6 +31,7 @@ const CandidateSchema = new mongoose.Schema({
     cnicNumber: {
         type: String,
         required: false,
+        default: null
     },
     dateOfBirth: {
         type: String,
