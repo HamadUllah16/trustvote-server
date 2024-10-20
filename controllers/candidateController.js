@@ -180,5 +180,15 @@ exports.getAllCandidates = async (req, res) => {
     }
 }
 
+exports.myCandidates = async(req,res) => {
+    console.log('/myCandidates accessed.');
+
+    try {
+        const candidates = await Candidate.find({con})
+    } catch (error) {
+        
+    }
+}
+
 
 

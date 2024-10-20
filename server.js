@@ -8,11 +8,11 @@ const swaggerUi = require('swagger-ui-express');
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const candidateRoutes = require('./routes/candidateRoutes');
+const constituencyRoutes = require('./routes/constituencyRoutes');
 const authRoutes = require('./routes/authRoutes')
 const connectDb = require('./config/database');
-const Candidate = require('./models/Candidate');
-const Admin = require('./models/Admin');
 const { createAdmin } = require('./controllers/adminController');
+const User = require('./models/User');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -53,6 +53,8 @@ app.use('/api/candidate', candidateRoutes)
 app.use('/api/user', userRoutes)
 // Admin routes
 app.use('/api/admin', adminRoutes);
+// Constituency routes
+app.use('/api/constituency', constituencyRoutes)
 
 const PORT = process.env.PORT || 3000;
 

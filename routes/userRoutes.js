@@ -14,5 +14,6 @@ router.put('/update-user-profile', verifyToken, multer.fields([
 router.get('/logout', verifyToken, userLogout)
 
 router.get('/all-political-parties', verifyToken, allPoliticalParties);
+router.get('/my-candidates', verifyToken, )
 
 module.exports = router;

@@ -17,7 +17,9 @@ async function userLogout(req, res, next) {
 }
 
 const updateUserProfile = async (req, res) => {
-    const { firstName, lastName, email, cnic, dateOfBirth, phone } = req.body;
+    console.log('/update-user-profile accessed')
+    console.log(req.body)
+    const { firstName, lastName, email, cnic, dateOfBirth, phone, constituency, province } = req.body;
 
     const { id } = req.user;
 
@@ -37,6 +39,8 @@ const updateUserProfile = async (req, res) => {
             user.phone = phone;
             user.cnicFront = cnicFront;
             user.cnicBack = cnicBack;
+            user.constituency = constituency;
+            user.province = province
 
             await user.save();
 
