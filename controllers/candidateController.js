@@ -1,4 +1,5 @@
 const Candidate = require('../models/Candidate');
+const User = require('../models/User')
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { fileUpload } = require('../utils/cloudinary');
@@ -180,13 +181,27 @@ exports.getAllCandidates = async (req, res) => {
     }
 }
 
-exports.myCandidates = async(req,res) => {
+exports.myCandidates = async (req, res) => {
     console.log('/myCandidates accessed.');
 
+    const { id } = req.user;
+
     try {
-        const candidates = await Candidate.find({con})
+        const user = await User.findById(id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' })
+        }
+
+        console.log(user.constituency)
+
+        const candidates = await Candidate.find({ constituency: user.constituency });
+        console.log(candidates);
+
+        return res.status(200).json({ message: 'Relevant candidates fetched.', candidates });
+
     } catch (error) {
-        
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 }
 

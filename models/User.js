@@ -41,6 +41,9 @@ const UserSchema = new mongoose.Schema({
     constituency: {
         type: String
     },
+    provincialConstituency: {
+        type: String
+    },
     naVote: {
         type: Boolean
     },

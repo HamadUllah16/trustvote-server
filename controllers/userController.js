@@ -17,9 +17,8 @@ async function userLogout(req, res, next) {
 }
 
 const updateUserProfile = async (req, res) => {
-    console.log('/update-user-profile accessed')
-    console.log(req.body)
-    const { firstName, lastName, email, cnic, dateOfBirth, phone, constituency, province } = req.body;
+    console.log('/update-user-profile accessed');
+    console.log(req.body);
 
     const { id } = req.user;
 
@@ -27,35 +26,42 @@ const updateUserProfile = async (req, res) => {
         if (id) {
             const user = await User.findById(id);
             if (!user) {
-                return res.status(401).json({ msgCode: '1001' })
+                return res.status(401).json({ msgCode: '1001' });
             }
-            const cnicFront = await fileUpload(req.files?.cnicFront[0]?.path, 'image');
-            const cnicBack = await fileUpload(req.files?.cnicBack[0]?.path, 'image');
 
-            user.firstName = firstName;
-            user.lastName = lastName;
-            user.cnic = cnic;
-            user.dateOfBirth = dateOfBirth;
-            user.phone = phone;
-            user.cnicFront = cnicFront;
-            user.cnicBack = cnicBack;
-            user.constituency = constituency;
-            user.province = province
+            // Check if each field exists in the request body before updating
+            if (req.body.firstName) user.firstName = req.body.firstName;
+            if (req.body.lastName) user.lastName = req.body.lastName;
+            if (req.body.cnic) user.cnic = req.body.cnic;
+            if (req.body.dateOfBirth) user.dateOfBirth = req.body.dateOfBirth;
+            if (req.body.phone) user.phone = req.body.phone;
+            if (req.body.constituency) user.constituency = req.body.constituency;
+            if (req.body.province) user.province = req.body.province;
+            if (req.body.provincialConstituency) user.provincialConstituency = req.body.provincialConstituency;
+
+            // Handle file uploads if present
+            if (req.files?.cnicFront && req.files.cnicFront[0]) {
+                const cnicFront = await fileUpload(req.files.cnicFront[0].path, 'image');
+                user.cnicFront = cnicFront;
+            }
+
+            if (req.files?.cnicBack && req.files.cnicBack[0]) {
+                const cnicBack = await fileUpload(req.files.cnicBack[0].path, 'image');
+                user.cnicBack = cnicBack;
+            }
 
             await user.save();
 
-            return res.status(200).json({ message: 'User updated successfully', user })
-
+            return res.status(200).json({ message: 'User updated successfully', user });
         }
 
-        return res.status(400).json({ message: 'invalid user id' });
+        return res.status(400).json({ message: 'Invalid user ID' });
     } catch (error) {
         console.error('Error updating profile:', error);
         return res.status(500).json({ msgCode: '1003', message: 'An error occurred while updating the profile' });
-
     }
+};
 
-}
 
 const getUserProfile = async (req, res) => {
     console.log('/getUserProfile')

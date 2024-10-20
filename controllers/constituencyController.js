@@ -47,7 +47,7 @@ exports.balochistanConstituency = async (req, res) => {
 
 exports.capitalConstituency = async (req, res) => {
     try {
-        const allConstituencies = await Constituency.findOne({ province: 'capital' });
+        const allConstituencies = await Constituency.findOne({ province: 'islamabad capital territory' });
         return res.status(200).json({ message: "capital constituencies fetched", data: allConstituencies })
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' })
