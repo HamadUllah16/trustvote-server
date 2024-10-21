@@ -205,5 +205,28 @@ exports.myCandidates = async (req, res) => {
     }
 }
 
+exports.myProvincialCandidates = async (req, res) => {
+    console.log('/myProvincialCandidates accessed.');
+
+    const { id } = req.user;
+
+    try {
+        const user = await User.findById(id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' })
+        }
+
+        const candidates = await Candidate.find({ constituency: user.provincialConstituency });
+
+        if (candidates) {
+            return res.status(200).json({ message: 'Provincial Candidates fetched', candidates })
+        }
+        return res.status(401).json({ message: 'No candidates found' });
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ error: 'Internal Server Error: \n' + error })
+    }
+}
 
 

@@ -1,5 +1,5 @@
 const { getPendingCandidates, getApprovedCandidates } = require('../controllers/adminController');
-const { getCandidateProfile, completeCandidateProfile, getAllCandidates, myCandidates } = require('../controllers/candidateController');
+const { getCandidateProfile, completeCandidateProfile, getAllCandidates, myCandidates, myProvincialCandidates } = require('../controllers/candidateController');
 const { verifyToken } = require('../middlewares/authMiddleware');
 const multer = require('../middlewares/multer');
 
@@ -21,5 +21,8 @@ router.get('/pending-candidates', verifyToken, getPendingCandidates);
 router.get('/approved-candidates', verifyToken, getApprovedCandidates)
 
 router.get('/my-candidates', verifyToken, myCandidates);
+
+// provincial candidates relevent to user
+router.get('/my-provincial-candidates', verifyToken, myProvincialCandidates)
 
 module.exports = router;
