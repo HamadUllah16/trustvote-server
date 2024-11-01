@@ -3,6 +3,9 @@ const User = require('../models/User')
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { fileUpload } = require('../utils/cloudinary');
+const { program, provider } = require('../config/anchor-client');
+const { Keypair } = require('@solana/web3.js');
+const anchor = require('@project-serum/anchor');
 
 // Login Candidate
 exports.loginCandidate = async (req, res) => {
@@ -229,4 +232,28 @@ exports.myProvincialCandidates = async (req, res) => {
     }
 }
 
+exports.pushCandidateToBlockchain = async (req, res) => {
+    const { name, affiliation } = req.body;
+    const { id } = req.user;
+    try {
+        const candidateKeypair = Keypair.generate();
+        const tx = await program.rpc.initializeCandidate(id, name, affiliation, {
+            accounts: {
+                data: candidateKeypair.publicKey,
+                user: provider.wallet.publicKey,
+                SystemProgram: anchor.web3.SystemProgram.programId
+            },
+            signers: [provider.wallet.payer, candidateKeypair]
+        })
+
+        const candidate = await Candidate.findById(id);
+        candidate.publicKey = candidateKeypair.publicKey;
+        await candidate.save();
+
+        console.log('Candidate pushed to blockchain: ', tx);
+        res.status(200).json({ message: 'Candidate initialized: ', publicKey: candidateKeypair.publicKey, id, tx })
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error: candidate initialization in blockchain ', error })
+    }
+}
 

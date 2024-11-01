@@ -2,8 +2,13 @@ const bcrypt = require('bcrypt');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const VoteAccount = require('../models/VoteAccount');
 const constants = require('../config/constants');
 const { fileUpload } = require('../utils/cloudinary');
+const { program, provider } = require('../config/anchor-client');
+const { Keypair } = require('@solana/web3.js');
+const anchor = require('@project-serum/anchor');
+const Candidate = require('../models/Candidate');
 
 async function userLogout(req, res, next) {
     const token = req.headers[constants.tokenHeaderKey];
@@ -88,4 +93,38 @@ const getUserProfile = async (req, res) => {
     }
 }
 
-module.exports = { updateUserProfile, getUserProfile, userLogout };
+const castAVote = async (req, res) => {
+    const { id } = req.user;
+    const { candidateId, votingSessionPublicKey } = req.body;
+
+    try {
+        if (id) {
+            const user = await User.findById(id);
+            const candidate = await Candidate.findById(candidateId)
+
+            if (user && candidate) {
+                const voteAccountKeypair = Keypair.generate();
+                const tx = await program.rpc.vote(id, candidate.id, {
+                    accounts: {
+                        voteData: voteAccount.publicKey,
+                        candidate: candidate.id,
+                        voting_session: votingSessionPublicKey
+                    },
+                    signers: [provider.wallet.payer, voterAccountKeypair]
+                })
+
+                const voteAccount = await VoteAccount.create({ candidatePublicKey: candidatePublicKey, voterId: id, voteAccountPublicKey: voteAccountKeypair.publicKey })
+                user.voteAccountPublicKey = voteAccountKeypair.publicKey;
+
+                console.log(`Vote casted by ${id} to ${candidateId}`);
+                res.status(200).json({ message: 'Vote casted.', tx })
+            }
+
+        }
+
+    } catch (error) {
+        console.log('Error in vote casting', error);
+        res.status(500).json({ message: "Internal Server Error: Vote Casting Failed." }, error)
+    }
+}
+module.exports = { updateUserProfile, getUserProfile, userLogout, castAVote };

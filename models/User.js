@@ -61,6 +61,9 @@ const UserSchema = new mongoose.Schema({
     profileCompletion: {
         type: Boolean,
         required: false
+    },
+    voteAccountPublicKey: {
+        type: String
     }
 })
 

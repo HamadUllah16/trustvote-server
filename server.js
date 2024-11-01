@@ -13,7 +13,7 @@ const authRoutes = require('./routes/authRoutes')
 const connectDb = require('./config/database');
 const { createAdmin } = require('./controllers/adminController');
 const provincialConstituencyRoutes = require('./routes/provincialConstituencyRoutes');
-const ProvincialConstituency = require('./models/ProvincialConstituency');
+const electionSessionRoutes = require('./routes/electionSessionRoutes');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -58,6 +58,8 @@ app.use('/api/admin', adminRoutes)
 app.use('/api/constituency', constituencyRoutes)
 // Provincial Constituencies
 app.use('/api/provincial-constituencies', provincialConstituencyRoutes)
+// Election Session
+app.use('/api/election-session', electionSessionRoutes);
 
 const PORT = process.env.PORT || 3000;
 
