@@ -1,7 +1,11 @@
 const Candidate = require('../models/Candidate');
+const User = require('../models/User')
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { fileUpload } = require('../utils/cloudinary');
+const { program, provider } = require('../config/anchor-client');
+const { Keypair } = require('@solana/web3.js');
+const anchor = require('@project-serum/anchor');
 
 // Login Candidate
 exports.loginCandidate = async (req, res) => {
@@ -180,5 +184,76 @@ exports.getAllCandidates = async (req, res) => {
     }
 }
 
+exports.myCandidates = async (req, res) => {
+    console.log('/myCandidates accessed.');
 
+    const { id } = req.user;
+
+    try {
+        const user = await User.findById(id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' })
+        }
+
+        console.log(user.constituency)
+
+        const candidates = await Candidate.find({ constituency: user.constituency });
+        console.log(candidates);
+
+        return res.status(200).json({ message: 'Relevant candidates fetched.', candidates });
+
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+exports.myProvincialCandidates = async (req, res) => {
+    console.log('/myProvincialCandidates accessed.');
+
+    const { id } = req.user;
+
+    try {
+        const user = await User.findById(id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' })
+        }
+
+        const candidates = await Candidate.find({ constituency: user.provincialConstituency });
+
+        if (candidates) {
+            return res.status(200).json({ message: 'Provincial Candidates fetched', candidates })
+        }
+        return res.status(401).json({ message: 'No candidates found' });
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ error: 'Internal Server Error: \n' + error })
+    }
+}
+
+exports.pushCandidateToBlockchain = async (req, res) => {
+    const { name, affiliation } = req.body;
+    const { id } = req.user;
+    try {
+        const candidateKeypair = Keypair.generate();
+        const tx = await program.rpc.initializeCandidate(id, name, affiliation, {
+            accounts: {
+                data: candidateKeypair.publicKey,
+                user: provider.wallet.publicKey,
+                SystemProgram: anchor.web3.SystemProgram.programId
+            },
+            signers: [provider.wallet.payer, candidateKeypair]
+        })
+
+        const candidate = await Candidate.findById(id);
+        candidate.publicKey = candidateKeypair.publicKey;
+        await candidate.save();
+
+        console.log('Candidate pushed to blockchain: ', tx);
+        res.status(200).json({ message: 'Candidate initialized: ', publicKey: candidateKeypair.publicKey, id, tx })
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error: candidate initialization in blockchain ', error })
+    }
+}
 

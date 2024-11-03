@@ -35,6 +35,21 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    province: {
+        type: String
+    },
+    constituency: {
+        type: String
+    },
+    provincialConstituency: {
+        type: String
+    },
+    naVote: {
+        type: Boolean
+    },
+    paVote: {
+        type: Boolean
+    },
     cnicFront: {
         type: String,
         required: false
@@ -46,6 +61,9 @@ const UserSchema = new mongoose.Schema({
     profileCompletion: {
         type: Boolean,
         required: false
+    },
+    voteAccountPublicKey: {
+        type: String
     }
 })
 

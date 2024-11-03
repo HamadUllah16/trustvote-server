@@ -85,6 +85,9 @@ const CandidateSchema = new mongoose.Schema({
     status: {
         type: String,
         required: false
+    },
+    publicKey: {
+        type: String,
     }
 })
 
