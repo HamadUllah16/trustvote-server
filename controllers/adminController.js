@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 const Candidate = require('../models/Candidate');
 
 exports.createAdmin = async () => {
-  console.log('/createAdmin accessed');
+  console.log('checking admin profile');
 
   const exists = await Admin.findOne({ email: "admin@gmail.com" });
 

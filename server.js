@@ -22,9 +22,7 @@ dotenv.config();
 const app = express();
 
 // Connect to MongoDB
-connectDb().then(() => {
-
-
+connectDb().then((msg) => {
     // Middleware setup
     app.use(express.json());
     app.use(morgan('dev'));
@@ -61,17 +59,22 @@ connectDb().then(() => {
     app.use('/api/provincial-constituencies', provincialConstituencyRoutes)
     // Election Session
     app.use('/api/election-session', electionSessionRoutes);
-})
 
-const PORT = process.env.PORT || 3000;
 
-app.listen((PORT), () => {
-    console.log(`Listening to ${PORT}`)
-})
+    // server setup
+    const PORT = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
-    console.log('Server up!')
-    res.status(200).json({ message: 'Server up' })
+    app.listen((PORT), () => {
+        console.log(`Listening to ${PORT}`)
+    })
+
+    app.get('/', (req, res) => {
+        console.log('Server up!')
+        res.status(200).json({ message: 'Server up', database: msg })
+    })
+}).catch((e) => {
+    console.log(e);
+    return e
 })
 
 module.exports = app;
