@@ -21,6 +21,22 @@ async function userLogout(req, res, next) {
     }
 }
 
+const registeredUsersCount = async (req, res) => {
+    console.log('registeredUsersCount invoked.')
+
+    try {
+        const users = await User.find({ profileCompletion: true });
+
+        if (users) {
+            console.log('User count: ', users.length);
+            return res.status(200).json({ message: "User count fetched.", userCount: users.length });
+        }
+        return res.status(401).json({ message: 'No user found.' });
+    } catch (error) {
+        return res.status(500).json({ message: 'Internal Server Error at RegisteredUsersCount: ', error });
+    }
+}
+
 const updateUserProfile = async (req, res) => {
     console.log('/update-user-profile accessed');
     console.log(req.body);
@@ -127,4 +143,4 @@ const castAVote = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error: Vote Casting Failed." }, error)
     }
 }
-module.exports = { updateUserProfile, getUserProfile, userLogout, castAVote };
+module.exports = { updateUserProfile, getUserProfile, userLogout, castAVote, registeredUsersCount };
