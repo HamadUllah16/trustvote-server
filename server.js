@@ -21,7 +21,7 @@ dotenv.config();
 
 const app = express();
 
-connectDb()
+let dbConnection = connectDb();
 
 // Middleware setup
 app.use(express.json());
@@ -85,7 +85,7 @@ app.listen((PORT), () => {
 
 app.get('/', (req, res) => {
     console.log('Server up!')
-    res.status(200).json({ message: 'Server up', database: msg })
+    res.status(200).json({ message: 'Server up', dbConnection })
 })
 
 
