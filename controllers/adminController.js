@@ -6,14 +6,16 @@ const Candidate = require('../models/Candidate');
 
 exports.createAdmin = async () => {
   console.log('checking admin profile');
-
-  const exists = await Admin.findOne({ email: "admin@gmail.com" });
+  const password = 'admin'
+  const email = 'admin@trustvote.com'
+  const exists = await Admin.findOne({ email });
 
   if (!exists) {
     console.log('Admin profile do not exists, creating automatically.');
-    const admin = await Admin.create({ email: 'admin@gmail.com', username: 'admin', password: 'admin', role: 'admin' });
+    const encryptedPassword = await bcrypt.hash(password, 10);
+    const admin = await Admin.create({ email, username: 'admin', password, role: 'admin' });
 
-    console.log('Admin created, Email: admin@gmail.com, Password: admin', admin)
+    console.log(`Admin created, Email: ${email}, Password: ${password}`, admin)
   }
 }
 
@@ -21,15 +23,19 @@ exports.createAdmin = async () => {
 // Admin login function
 exports.adminLogin = async (req, res) => {
   const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required." });
+  }
+
   try {
     const admin = await Admin.findOne({ email });
     if (!admin) {
       return res.status(404).json({ message: "Admin not found." });
     }
 
-    // const isMatch = await bcrypt.compare(password, admin.password);
-    console.log(password, admin.password)
-    if (password !== admin.password) {
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials." });
     }
 
@@ -39,7 +45,12 @@ exports.adminLogin = async (req, res) => {
       { expiresIn: '5d' }
     );
 
-    res.status(200).json({ token, id: admin._id, email: admin.email, role: 'admin' });
+    res.status(200).json({
+      token,
+      id: admin._id,
+      email: admin.email,
+      role: 'admin'
+    });
   } catch (error) {
     console.error("Error logging in admin:", error);
     res.status(500).json({ message: "Internal server error." });
@@ -62,12 +73,12 @@ exports.adminProfile = async (req, res) => {
     }
     return res.status(401).json({ error: 'Invalid id, user not found.' });
   } catch (error) {
-    res.status(500).json({ error: 'An error occurred while fetching the admin profile.' }); // Better error message
+    res.status(500).json({ error: 'An error occurred while fetching the admin profile.' });
   }
 };
 exports.getApprovedCandidates = async (req, res) => {
   try {
-    const candidates = await Candidate.find({ profileCompletion: true, status: 'approved' }, { password: 0, createdAt: 0, updatedAt: 0 })
+    const candidates = await Candidate.find({ status: 'approved' }, { password: 0, createdAt: 0, updatedAt: 0, votes: 0 })
     res.status(200).json({ candidates, message: 'Approved candidates fetched.' })
   } catch (error) {
     console.error('Error getting approved candidates.', error)

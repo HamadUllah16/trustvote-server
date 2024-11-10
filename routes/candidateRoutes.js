@@ -1,5 +1,5 @@
 const { getPendingCandidates, getApprovedCandidates } = require('../controllers/adminController');
-const { getCandidateProfile, completeCandidateProfile, getAllCandidates, myCandidates, myProvincialCandidates, pushCandidateToBlockchain } = require('../controllers/candidateController');
+const { getCandidateProfile, completeCandidateProfile, getAllCandidates, myCandidates, myProvincialCandidates, candidatesOfConstituency, approvedCandidatesForResults } = require('../controllers/candidateController');
 const { verifyToken } = require('../middlewares/authMiddleware');
 const multer = require('../middlewares/multer');
 
@@ -25,7 +25,10 @@ router.get('/my-candidates', verifyToken, myCandidates);
 // provincial candidates relevent to user
 router.get('/my-provincial-candidates', verifyToken, myProvincialCandidates)
 
-// candidate push to blockchain
-router.get('/append-candidate-to-blockchain', verifyToken, pushCandidateToBlockchain)
+// find candidates based of constituency
+router.post('/candidates-off-constituency', candidatesOfConstituency);
+
+router.post('/approved-candidates-for-results', approvedCandidatesForResults);
+
 
 module.exports = router;

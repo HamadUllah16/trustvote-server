@@ -4,11 +4,13 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const VoteAccount = require('../models/VoteAccount');
 const constants = require('../config/constants');
-const { fileUpload } = require('../utils/cloudinary');
 const { program, provider } = require('../config/anchor-client');
 const { Keypair } = require('@solana/web3.js');
 const anchor = require('@project-serum/anchor');
 const Candidate = require('../models/Candidate');
+const ElectionSession = require('../models/ElectionSession');
+const { castVote } = require('../utils/blockChainHelper');
+const { fileUpload } = require('../utils/cloudinary');
 
 async function userLogout(req, res, next) {
     const token = req.headers[constants.tokenHeaderKey];
@@ -39,7 +41,7 @@ const registeredUsersCount = async (req, res) => {
 
 const updateUserProfile = async (req, res) => {
     console.log('/update-user-profile accessed');
-    console.log(req.body);
+    console.log(req.files);
 
     const { id } = req.user;
 
@@ -54,7 +56,7 @@ const updateUserProfile = async (req, res) => {
             if (req.body.firstName) user.firstName = req.body.firstName;
             if (req.body.lastName) user.lastName = req.body.lastName;
             if (req.body.cnic) user.cnic = req.body.cnic;
-            if (req.body.dateOfBirth) user.dateOfBirth = req.body.dateOfBirth;
+            if (req.body.date) user.dateOfBirth = req.body.date;
             if (req.body.phone) user.phone = req.body.phone;
             if (req.body.constituency) user.constituency = req.body.constituency;
             if (req.body.province) user.province = req.body.province;
@@ -62,13 +64,18 @@ const updateUserProfile = async (req, res) => {
 
             // Handle file uploads if present
             if (req.files?.cnicFront && req.files.cnicFront[0]) {
-                const cnicFront = await fileUpload(req.files.cnicFront[0].path, 'image');
+                const cnicFront = await fileUpload(req.files.cnicFront[0].buffer, 'image');
                 user.cnicFront = cnicFront;
             }
 
             if (req.files?.cnicBack && req.files.cnicBack[0]) {
-                const cnicBack = await fileUpload(req.files.cnicBack[0].path, 'image');
+                const cnicBack = await fileUpload(req.files.cnicBack[0].buffer, 'image');
                 user.cnicBack = cnicBack;
+            }
+
+            if (req.files?.profilePicture && req.files.profilePicture[0]) {
+                const profilePicture = await fileUpload(req.files.profilePicture[0].buffer, 'image');
+                user.profilePicture = profilePicture;
             }
 
             await user.save();
@@ -112,29 +119,52 @@ const getUserProfile = async (req, res) => {
 const castAVote = async (req, res) => {
     const { id } = req.user;
     const { candidateId, votingSessionPublicKey } = req.body;
-
+    console.log(req.body)
     try {
         if (id) {
             const user = await User.findById(id);
             const candidate = await Candidate.findById(candidateId)
+            const electionSession = await ElectionSession.findOne({ electionSessionPublicKey: votingSessionPublicKey })
 
-            if (user && candidate) {
+            console.log("Candidate Public Key: ", candidate.publicKey);
+
+            if (user && candidate && votingSessionPublicKey) {
                 const voteAccountKeypair = Keypair.generate();
-                const tx = await program.rpc.vote(id, candidate.id, {
-                    accounts: {
-                        voteData: voteAccount.publicKey,
-                        candidate: candidate.id,
-                        voting_session: votingSessionPublicKey
-                    },
-                    signers: [provider.wallet.payer, voterAccountKeypair]
-                })
+                let tx;
+                if (candidate.constituencyType === 'national assembly' && user.naVote) {
+                    tx = castVote(id, candidateId, voteAccountKeypair, candidate, votingSessionPublicKey);
+                }
+                else if (candidate.constituencyType === 'provincial assembly' && user.paVote) {
+                    tx = castVote(id, candidateId, voteAccountKeypair, candidate, votingSessionPublicKey);
+                }
+                else {
+                    console.error('Voter does not have any remaining votes in this constituency type.');
+                    return res.status(401).json({ message: "No votes remaining in this constituency." })
+                }
 
-                const voteAccount = await VoteAccount.create({ candidatePublicKey: candidatePublicKey, voterId: id, voteAccountPublicKey: voteAccountKeypair.publicKey })
-                user.voteAccountPublicKey = voteAccountKeypair.publicKey;
+                if (tx) {
 
-                console.log(`Vote casted by ${id} to ${candidateId}`);
-                res.status(200).json({ message: 'Vote casted.', tx })
+                    const voteAccount = await VoteAccount.create({ candidatePublicKey: candidate.publicKey, voterId: id, voteAccountPublicKey: voteAccountKeypair.publicKey, votingSessionPublicKey, candidateId })
+
+                    candidate.votes[0].voters.push(user._id);
+                    if (candidate.constituencyType === 'national assembly') {
+                        user.naVote = false;
+                    }
+                    if (candidate.constituencyType === 'provincial assembly') {
+                        user.paVote = false;
+                    }
+                    await candidate.save();
+
+                    user.voteAccountPublicKey = voteAccountKeypair.publicKey;
+                    await user.save();
+
+                    console.log(`Vote casted by ${id} to ${candidateId}`);
+                    return res.status(200).json({ message: `Vote casted ${candidate.firstName} representing ${candidate.partyAffiliation}.`, tx, voteAccount })
+                }
+                return res.status(500).json({ 'Transaction failed: ': tx });
             }
+            console.error('parameters missing: User id, candidate id or election session public key')
+            return res.status(401).json({ message: 'Authorized User, Candidate or active Election Session Public Key missing.' })
 
         }
 

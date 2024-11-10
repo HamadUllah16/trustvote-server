@@ -106,7 +106,7 @@ const registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hash = await bcrypt.hash(password, salt);
 
-        await User.create({ role: 'voter', email, password: hash, phone: null, cnicBack: null, cnicFront: null, naVote: true, paVote: true });
+        await User.create({ role: 'voter', profilePicture: '', email, password: hash, phone: null, cnicBack: null, cnicFront: null, naVote: true, paVote: true });
 
         return res.status(200).json({ message: 'User registered successfully.' });
 

@@ -14,6 +14,8 @@ const connectDb = require('./config/database');
 const { createAdmin } = require('./controllers/adminController');
 const provincialConstituencyRoutes = require('./routes/provincialConstituencyRoutes');
 const electionSessionRoutes = require('./routes/electionSessionRoutes');
+const multer = require('./middlewares/multer');
+const { fileUpload } = require('./utils/cloudinary');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -60,6 +62,21 @@ connectDb().then((msg) => {
     // Election Session
     app.use('/api/election-session', electionSessionRoutes);
 
+    app.post('/upload', multer.single('test'), async (req, res) => {
+        console.log(req.body)
+        try {
+            if (!req.file) {
+                console.error('No file attached.')
+                return res.status(400).send('No file uploaded.')
+            }
+            const fileType = req.file.mimetype.split('/')[0];
+            const cloudinaryUrl = await fileUpload(req.file.buffer, fileType);
+
+            res.send({ url: cloudinaryUrl });
+        } catch (error) {
+            res.status(500).json({ message: 'Internal Server Error.' })
+        }
+    })
 
     // server setup
     const PORT = process.env.PORT || 3000;
