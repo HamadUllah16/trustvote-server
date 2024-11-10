@@ -6,6 +6,8 @@ const { fileUpload } = require('../utils/cloudinary');
 const { program, provider } = require('../config/anchor-client');
 const { Keypair } = require('@solana/web3.js');
 const anchor = require('@project-serum/anchor');
+const { pushCandidateToBlockchain } = require('../utils/blockChainHelper');
+const ElectionSession = require('../models/ElectionSession');
 
 // Login Candidate
 exports.loginCandidate = async (req, res) => {
@@ -28,10 +30,10 @@ exports.loginCandidate = async (req, res) => {
         const token = jwt.sign(
             { id: candidate._id, email: candidate.email },
             process.env.JWT_SECRET,
-            { expiresIn: '5d' } // Token expires in 1 hour
+            { expiresIn: '5d' }
         );
 
-        res.status(200).json({ token, candidate: { id: candidate._id, email: candidate.email } });
+        res.status(200).json({ token, candidate: { id: candidate._id, email: candidate.email }, role: candidate.role });
     } catch (error) {
         console.error("Error logging in candidate:", error);
         res.status(500).json({ message: "Internal server error." });
@@ -44,7 +46,7 @@ exports.getCandidateProfile = async (req, res) => {
 
     try {
         if (id) {
-            const candidate = await Candidate.findById(id, { password: 0 })
+            const candidate = await Candidate.findById(id, { password: 0, codeOfConduct: 0 })
             if (!candidate) {
                 res.status(401);
                 return next({ msgCode: '1001' });
@@ -64,6 +66,7 @@ exports.getCandidateProfile = async (req, res) => {
 
 }
 
+
 exports.completeCandidateProfile = async (req, res) => {
     const { id } = req.user;
     console.log('completeCandidateProfile controller invoked');
@@ -82,11 +85,11 @@ exports.completeCandidateProfile = async (req, res) => {
         }
 
         // upload the files to cloudinary and get link
-        const cnicFront = await fileUpload(req.files?.cnicFront[0]?.path, 'image');
-        const cnicBack = await fileUpload(req.files?.cnicBack[0]?.path, 'image')
-        const manifesto = await fileUpload(req.files?.manifesto[0]?.path, 'raw');
-        const educationalCertificates = await fileUpload(req.files?.educationalCertificates[0]?.path, 'raw');
-        const assetDeclaration = await fileUpload(req.files?.assetDeclaration[0]?.path, 'raw');
+        const cnicFront = await fileUpload(req.files?.cnicFront[0]?.buffer, 'image');
+        const cnicBack = await fileUpload(req.files?.cnicBack[0]?.buffer, 'image')
+        const manifesto = await fileUpload(req.files?.manifesto[0]?.buffer, 'raw');
+        const educationalCertificates = await fileUpload(req.files?.educationalCertificates[0]?.buffer, 'raw');
+        const assetDeclaration = await fileUpload(req.files?.assetDeclaration[0]?.buffer, 'raw');
 
         candidate.firstName = firstName;
         candidate.lastName = lastName;
@@ -103,9 +106,6 @@ exports.completeCandidateProfile = async (req, res) => {
         candidate.manifesto = manifesto;
         candidate.educationalCertificates = educationalCertificates;
         candidate.assetDeclaration = assetDeclaration;
-        // Object.keys(completeData).forEach(key => {
-        //     candidate[key] = completeData[key];
-        // })
 
         console.log('Attempting to save the candidate...');
         await candidate.save();
@@ -124,8 +124,13 @@ exports.registerCandidate = async (req, res) => {
 
     try {
         const { email, password } = req.body;
+        const electionSession = await ElectionSession.findOne().sort({ _id: -1 });
 
-        // Check if the candidate already exists
+        if (electionSession && (electionSession.status === 'active' || electionSession.status === 'paused')) {
+            console.error('Election session active, no new candidates can be registered at this time.');
+            return res.status(401).json({ message: "Election Session is Active, no registeration can be processed at this moment." });
+        }
+
         const existingCandidate = await Candidate.findOne({ email });
         if (existingCandidate) {
             console.log('Candidate with this email already exists:', email);
@@ -133,7 +138,7 @@ exports.registerCandidate = async (req, res) => {
         }
 
         // Create a new candidate
-        const newCandidate = new Candidate({
+        const newCandidate = await Candidate.create({
             role: 'candidate',
             email,
             password: await bcrypt.hash(password, await bcrypt.genSalt(10)),
@@ -152,13 +157,12 @@ exports.registerCandidate = async (req, res) => {
             educationalCertificates: null,
             assetDeclaration: null,
             codeOfConduct: false,
-
+            publicKey: '',
+            votes: [],
             profileCompletion: false,
             status: 'pending'
         });
 
-        // Save the candidate to the database
-        await newCandidate.save();
         console.log('New candidate registered:', newCandidate);
 
         res.status(201).json({ message: "Candidate registered successfully. Please complete your profile.", candidate: newCandidate });
@@ -198,7 +202,7 @@ exports.myCandidates = async (req, res) => {
 
         console.log(user.constituency)
 
-        const candidates = await Candidate.find({ constituency: user.constituency });
+        const candidates = await Candidate.find({ constituency: user.constituency, status: 'approved' });
         console.log(candidates);
 
         return res.status(200).json({ message: 'Relevant candidates fetched.', candidates });
@@ -220,7 +224,7 @@ exports.myProvincialCandidates = async (req, res) => {
             return res.status(404).json({ message: 'User not found.' })
         }
 
-        const candidates = await Candidate.find({ constituency: user.provincialConstituency });
+        const candidates = await Candidate.find({ constituency: user.provincialConstituency, status: 'approved' });
 
         if (candidates) {
             return res.status(200).json({ message: 'Provincial Candidates fetched', candidates })
@@ -232,28 +236,64 @@ exports.myProvincialCandidates = async (req, res) => {
     }
 }
 
-exports.pushCandidateToBlockchain = async (req, res) => {
-    const { name, affiliation } = req.body;
-    const { id } = req.user;
+exports.candidatesOfConstituency = async (req, res) => {
+    const { constituency, electionSessionId } = req.body;
+    console.log(req.body)
+
     try {
-        const candidateKeypair = Keypair.generate();
-        const tx = await program.rpc.initializeCandidate(id, name, affiliation, {
-            accounts: {
-                data: candidateKeypair.publicKey,
-                user: provider.wallet.publicKey,
-                SystemProgram: anchor.web3.SystemProgram.programId
-            },
-            signers: [provider.wallet.payer, candidateKeypair]
-        })
+        const electionSession = await ElectionSession.findById(electionSessionId);
+        if (electionSession) {
+            if (constituency) {
+                const candidates = await Candidate.find({ constituency, status: 'approved' });
 
-        const candidate = await Candidate.findById(id);
-        candidate.publicKey = candidateKeypair.publicKey;
-        await candidate.save();
-
-        console.log('Candidate pushed to blockchain: ', tx);
-        res.status(200).json({ message: 'Candidate initialized: ', publicKey: candidateKeypair.publicKey, id, tx })
+                if (candidates) {
+                    console.log('Candidates based off constituency fetched.', candidates);
+                    return res.status(200).json({ message: 'Candidates fetched.', candidates })
+                }
+                console.error('No candidates found.')
+                return res.status(401).json({ message: "No candidates found in this constituency." });
+            }
+        }
+        console.error('No election session found.')
+        return res.status(401).json({ message: 'No election session found.' })
     } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error: candidate initialization in blockchain ', error })
+        console.error(error);
+        res.status(500).json({ message: "Interal Server Error", error })
     }
 }
 
+exports.approvedCandidatesForResults = async (req, res) => {
+    const { electionSessionId } = req.body;
+
+    try {
+        // Fetching candidates with only relevant voting data and including other necessary fields
+        const candidates = await Candidate.find(
+            {
+                votes: { $elemMatch: { electionSessionId } }
+            },
+            {
+                firstName: 1, // Include the fields you need (e.g., name, party, constituency)
+                lastName: 1,
+                partyAffiliation: 1,
+                constituency: 1,
+                constituencyType: 1,
+                votes: { $elemMatch: { electionSessionId } }
+            }
+        );
+
+        if (candidates.length > 0) {
+            console.log('Candidates found: ', candidates)
+            return res.status(200).json({
+                message: 'Approved Candidates For Results fetched.',
+                candidates,
+            });
+        }
+
+        console.log('No candidates found: ', candidates)
+        return res.status(404).json({ message: "No candidates found.", candidates });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server Error', error });
+    }
+};

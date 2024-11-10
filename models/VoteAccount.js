@@ -16,6 +16,10 @@ const voteCastSchema = new mongoose.Schema({
     voteAccountPublicKey: {
         type: String,
         required: true
+    },
+    votingSessionPublicKey: {
+        type: String,
+        required: true
     }
 })
 

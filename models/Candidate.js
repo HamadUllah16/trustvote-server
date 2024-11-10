@@ -5,6 +5,11 @@ const CandidateSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    profilePicture: {
+        type: String,
+        required: false,
+        default: ''
+    },
     firstName: {
         type: String,
         unique: false,
@@ -84,11 +89,28 @@ const CandidateSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        required: false
+        required: false,
+        default: ''
     },
     publicKey: {
         type: String,
-    }
+        default: '',
+    },
+    votes: [
+        {
+            electionSessionId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'ElectionSession',
+            },
+            name: { type: String },
+            voters: [
+                {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'User'
+                }
+            ]
+        }
+    ]
 })
 
 CandidateSchema.pre('save', function (next) {

@@ -4,6 +4,11 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    profilePicture: {
+        type: String,
+        required: false,
+        default: ''
+    },
     firstName: {
         type: String,
         unique: false,
@@ -45,14 +50,16 @@ const UserSchema = new mongoose.Schema({
         type: String
     },
     naVote: {
-        type: Boolean
+        type: Boolean,
+        default: false
     },
     paVote: {
-        type: Boolean
+        type: Boolean,
+        default: false
     },
     cnicFront: {
         type: String,
-        required: false
+        required: false,
     },
     cnicBack: {
         type: String,

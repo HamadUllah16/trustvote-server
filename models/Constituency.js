@@ -12,4 +12,4 @@ const ConstituencySchema = new mongoose.Schema({
     ]
 })
 
-module.exports = mongoose.model('Constituency', ConstituencySchema)
+module.exports = mongoose.model('Constituency', ConstituencySchema);

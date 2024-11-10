@@ -1,34 +1,33 @@
-const cloundinary = require('cloudinary').v2;
+const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 require('dotenv').config();
 
 
-cloundinary.config({
+cloudinary.config({
     cloud_name: process.env.CLOUD_NAME,
     api_key: process.env.CLOUD_API_KEY,
     api_secret: process.env.CLOUD_API_SECRET
 })
 
 
-exports.fileUpload = async (localFilePath, fileType) => {
-    console.log('Cloudinary: file upload accessed.')
-    try {
-        if (!localFilePath) {
-            console.log('Invalid path');
-            return null
-        }
-        //upload the file to cloudinary from local
-        const response = await cloundinary.uploader.upload(localFilePath, { resource_type: fileType });
+function fileUpload(buffer, fileType) {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            { resource_type: fileType },
+            (error, result) => {
+                if (error) {
+                    console.error('Error in Cloudinary upload:', error);
+                    reject(error);
+                } else {
+                    console.log('File uploaded to Cloudinary:', result.secure_url);
+                    resolve(result.secure_url);
+                }
+            }
+        );
 
-        console.log('file uploaded to cloudinary', response.url);
-        return response.url;
+        // Convert buffer to a stream and pipe it to Cloudinary
+        uploadStream.end(buffer);
+    });
+};
 
-    } catch (error) {
-        //remove file from local
-        // fs.unlinkSync(localFilePath);
-        console.log('Error in cloudinary upload: ', error)
-        return null
-    }
-}
-
-// module.exports = fileUpload;
+module.exports = { fileUpload }
