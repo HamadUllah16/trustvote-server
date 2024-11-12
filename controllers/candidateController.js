@@ -90,6 +90,7 @@ exports.completeCandidateProfile = async (req, res) => {
         const manifesto = await fileUpload(req.files?.manifesto[0]?.buffer, 'raw');
         const educationalCertificates = await fileUpload(req.files?.educationalCertificates[0]?.buffer, 'raw');
         const assetDeclaration = await fileUpload(req.files?.assetDeclaration[0]?.buffer, 'raw');
+        const profilePicture = await fileUpload(req.files?.profilePicture[0]?.buffer, 'image')
 
         candidate.firstName = firstName;
         candidate.lastName = lastName;
@@ -106,6 +107,7 @@ exports.completeCandidateProfile = async (req, res) => {
         candidate.manifesto = manifesto;
         candidate.educationalCertificates = educationalCertificates;
         candidate.assetDeclaration = assetDeclaration;
+        candidate.profilePicture = profilePicture;
 
         console.log('Attempting to save the candidate...');
         await candidate.save();

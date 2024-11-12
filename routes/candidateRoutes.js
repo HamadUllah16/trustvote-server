@@ -12,7 +12,8 @@ router.put('/update-profile',
         { name: 'cnicFront' },
         { name: 'cnicBack' },
         { name: 'educationalCertificates' },
-        { name: 'assetDeclaration' }
+        { name: 'assetDeclaration' },
+        { name: 'proflePicture' }
     ]),
     completeCandidateProfile)
 router.get('/get-candidate-profile', verifyToken, getCandidateProfile)
