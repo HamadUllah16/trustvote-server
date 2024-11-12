@@ -5,21 +5,29 @@ const cors = require('cors');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
 const swaggerUi = require('swagger-ui-express');
+const { createServer } = require('http'); // Import HTTP server creation
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const candidateRoutes = require('./routes/candidateRoutes');
 const constituencyRoutes = require('./routes/constituencyRoutes');
-const authRoutes = require('./routes/authRoutes')
+const authRoutes = require('./routes/authRoutes');
 const connectDb = require('./config/database');
 const { createAdmin } = require('./controllers/adminController');
 const provincialConstituencyRoutes = require('./routes/provincialConstituencyRoutes');
 const electionSessionRoutes = require('./routes/electionSessionRoutes');
 const multer = require('./middlewares/multer');
 const { fileUpload } = require('./utils/cloudinary');
+const { initializeSocket } = require('./config/socket'); // Import Socket.IO initialization
 
 dotenv.config();
 
 const app = express();
+
+// Create HTTP server instance
+const httpServer = createServer(app);
+
+// Initialize Socket.IO with the HTTP server
+initializeSocket(httpServer);
 
 let dbConnection = connectDb();
 
@@ -39,54 +47,38 @@ app.use(cors({
     credentials: true,
 }));
 
-app.use(express.json({ limit: '20mb' }))
+app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-//create default admin if not exists
+// Create default admin if not exists
 createAdmin();
 
 // Authentication routes
-app.use('/api/auth', authRoutes)
+app.use('/api/auth', authRoutes);
 // Candidate routes
-app.use('/api/candidate', candidateRoutes)
+app.use('/api/candidate', candidateRoutes);
 // User routes
-app.use('/api/user', userRoutes)
+app.use('/api/user', userRoutes);
 // Admin routes
-app.use('/api/admin', adminRoutes)
+app.use('/api/admin', adminRoutes);
 // Constituency routes
-app.use('/api/constituency', constituencyRoutes)
+app.use('/api/constituency', constituencyRoutes);
 // Provincial Constituencies
-app.use('/api/provincial-constituencies', provincialConstituencyRoutes)
+app.use('/api/provincial-constituencies', provincialConstituencyRoutes);
 // Election Session
 app.use('/api/election-session', electionSessionRoutes);
 
-app.post('/upload', multer.single('test'), async (req, res) => {
-    console.log(req.body)
-    try {
-        if (!req.file) {
-            console.error('No file attached.')
-            return res.status(400).send('No file uploaded.')
-        }
-        const fileType = req.file.mimetype.split('/')[0];
-        const cloudinaryUrl = await fileUpload(req.file.buffer, fileType);
+// Root route
+app.get('/', (req, res) => {
+    console.log('Server up!');
+    res.status(200).json({ message: 'Server up', dbConnection });
+});
 
-        res.send({ url: cloudinaryUrl });
-    } catch (error) {
-        res.status(500).json({ message: 'Internal Server Error.' })
-    }
-})
-
-// server setup
+// Start the server
 const PORT = process.env.PORT || 3000;
 
-app.listen((PORT), () => {
-    console.log(`Listening to ${PORT}`)
-})
-
-app.get('/', (req, res) => {
-    console.log('Server up!')
-    res.status(200).json({ message: 'Server up', dbConnection })
-})
-
+httpServer.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
 
 module.exports = app;
