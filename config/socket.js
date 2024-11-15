@@ -5,7 +5,7 @@ let io;
 const initializeSocket = (httpServer) => {
     io = new Server(httpServer, {
         cors: {
-            origin: process.env.CLIENT_URL || 'http://localhost:3001', // Adjust this based on your frontend URL
+            origin: process.env.CLIENT_URL || 'http://localhost:3001',
             methods: ['GET', 'POST'],
             credentials: true,
         },

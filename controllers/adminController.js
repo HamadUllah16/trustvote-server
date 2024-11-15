@@ -16,6 +16,8 @@ exports.createAdmin = async () => {
     const admin = await Admin.create({ email, username: 'admin', password, role: 'admin' });
 
     console.log(`Admin created, Email: ${email}, Password: ${password}`, admin)
+  } else {
+    console.log('Admin profile exists')
   }
 }
 
