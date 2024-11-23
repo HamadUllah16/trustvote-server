@@ -8,12 +8,12 @@ const router = require('express').Router();
 router.put('/update-profile',
     verifyToken,
     multer.fields([
+        { name: 'profilePicture' },
         { name: 'manifesto' },
         { name: 'cnicFront' },
         { name: 'cnicBack' },
         { name: 'educationalCertificates' },
         { name: 'assetDeclaration' },
-        { name: 'proflePicture' }
     ]),
     completeCandidateProfile)
 router.get('/get-candidate-profile', verifyToken, getCandidateProfile)
