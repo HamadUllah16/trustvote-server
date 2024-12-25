@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const autoIncrement = require('mongoose-sequence')(mongoose)
 
 const CandidateSchema = new mongoose.Schema({
     role: {
@@ -144,5 +145,7 @@ CandidateSchema.pre('save', function (next) {
 
     next();
 });
+
+CandidateSchema.plugin(autoIncrement, { inc_field: 'candidateId' });
 
 module.exports = mongoose.model('Candidate', CandidateSchema)

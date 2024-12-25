@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const voteCastSchema = new mongoose.Schema({
     voterId: {
         type: String,
@@ -19,6 +18,11 @@ const voteCastSchema = new mongoose.Schema({
     },
     votingSessionPublicKey: {
         type: String,
+        required: true
+    },
+    tx: {
+        type: String,
+        default: '',
         required: true
     }
 })
