@@ -169,7 +169,7 @@ exports.registerCandidate = async (req, res) => {
             publicKey: '',
             votes: [],
             profileCompletion: false,
-            status: 'pending'
+            status: 'unverified'
         });
 
         console.log('New candidate registered:', newCandidate);

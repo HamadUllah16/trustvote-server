@@ -90,6 +90,7 @@ const CandidateSchema = new mongoose.Schema({
     },
     status: {
         type: String,
+        enum: ['verified', 'pending', 'unverified'],
         required: false,
         default: ''
     },
