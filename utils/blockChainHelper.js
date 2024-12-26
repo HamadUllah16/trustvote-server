@@ -5,7 +5,7 @@ const anchor = require('@project-serum/anchor');
 async function pushCandidateToBlockchain(candidate) {
     try {
         const candidateKeypair = Keypair.generate();
-        const tx = await program.rpc.initializeCandidate(candidate._id, candidate.firstName + ' ' + candidate.lastName, candidate.partyAffiliation, {
+        const tx = await program.rpc.initializeCandidate(candidate.candidateId, {
             accounts: {
                 data: candidateKeypair.publicKey,
                 user: provider.wallet.publicKey,
@@ -23,8 +23,8 @@ async function pushCandidateToBlockchain(candidate) {
     }
 }
 
-async function castVote(voterId, candidateId, voteAccountKeypair, candidate, votingSessionPublicKey) {
-    const tx = await program.rpc.castVote(voterId, candidateId, {
+async function castVote(voterId, voteAccountKeypair, candidate, votingSessionPublicKey) {
+    const tx = await program.rpc.castVote(voterId, candidate.candidateId, {
         accounts: {
             voteData: voteAccountKeypair.publicKey,
             candidate: candidate.publicKey,
@@ -34,6 +34,7 @@ async function castVote(voterId, candidateId, voteAccountKeypair, candidate, vot
         },
         signers: [provider.wallet.payer, voteAccountKeypair]
     })
+    return tx;
 }
 
 module.exports = { castVote, pushCandidateToBlockchain }

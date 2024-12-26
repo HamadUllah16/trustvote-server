@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const autoIncrement = require('mongoose-sequence')(mongoose)
 const UserSchema = new mongoose.Schema({
     role: {
         type: String,
@@ -41,13 +42,16 @@ const UserSchema = new mongoose.Schema({
         required: false
     },
     province: {
-        type: String
+        type: String,
+        default: ''
     },
     constituency: {
-        type: String
+        type: String,
+        default: ''
     },
     provincialConstituency: {
-        type: String
+        type: String,
+        default: ''
     },
     naVote: {
         type: Boolean,
@@ -98,5 +102,7 @@ UserSchema.pre('save', function (next) {
 
     next();
 });
+
+UserSchema.plugin(autoIncrement, { inc_field: 'userId' });
 
 module.exports = mongoose.model('User', UserSchema);

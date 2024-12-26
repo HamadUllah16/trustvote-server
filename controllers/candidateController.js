@@ -70,7 +70,10 @@ exports.getCandidateProfile = async (req, res) => {
 exports.completeCandidateProfile = async (req, res) => {
     const { id } = req.user;
     console.log('completeCandidateProfile controller invoked');
-    const { firstName, lastName, phone, dateOfBirth, gender, cnicNumber, constituencyType, constituency, partyAffiliation, codeOfConduct } = req.body;
+    const allowedFields = [
+        'firstName', 'lastName', 'phone', 'dateOfBirth', 'gender', 'cnicNumber',
+        'constituencyType', 'constituency', 'partyAffiliation', 'codeOfConduct'
+    ];
 
     console.log('Request params:', req.params);
     console.log('Request body:', req.body);
@@ -84,30 +87,34 @@ exports.completeCandidateProfile = async (req, res) => {
             return res.status(404).json({ message: "Candidate not found." });
         }
 
-        // upload the files to cloudinary and get link
-        const cnicFront = await fileUpload(req.files?.cnicFront[0]?.buffer, 'image');
-        const cnicBack = await fileUpload(req.files?.cnicBack[0]?.buffer, 'image')
-        const manifesto = await fileUpload(req.files?.manifesto[0]?.buffer, 'raw');
-        const educationalCertificates = await fileUpload(req.files?.educationalCertificates[0]?.buffer, 'raw');
-        const assetDeclaration = await fileUpload(req.files?.assetDeclaration[0]?.buffer, 'raw');
-        const profilePicture = await fileUpload(req.files?.profilePicture[0]?.buffer, 'image')
+        // Update only the fields sent in the request body
+        allowedFields.forEach(field => {
+            if (req.body[field]) {
+                candidate[field] = req.body[field];
+            }
+        });
 
-        candidate.firstName = firstName;
-        candidate.lastName = lastName;
-        candidate.phone = phone;
-        candidate.dateOfBirth = dateOfBirth;
-        candidate.gender = gender;
-        candidate.cnicNumber = cnicNumber;
-        candidate.constituencyType = constituencyType;
-        candidate.constituency = constituency;
-        candidate.partyAffiliation = partyAffiliation;
-        candidate.codeOfConduct = codeOfConduct;
-        candidate.cnicFront = cnicFront;
-        candidate.cnicBack = cnicBack;
-        candidate.manifesto = manifesto;
-        candidate.educationalCertificates = educationalCertificates;
-        candidate.assetDeclaration = assetDeclaration;
-        candidate.profilePicture = profilePicture;
+        // Upload files if they exist in the request
+        if (req.files) {
+            if (req.files.cnicFront) {
+                candidate.cnicFront = await fileUpload(req.files.cnicFront[0]?.buffer, 'image');
+            }
+            if (req.files.cnicBack) {
+                candidate.cnicBack = await fileUpload(req.files.cnicBack[0]?.buffer, 'image');
+            }
+            if (req.files.manifesto) {
+                candidate.manifesto = await fileUpload(req.files.manifesto[0]?.buffer, 'raw');
+            }
+            if (req.files.educationalCertificates) {
+                candidate.educationalCertificates = await fileUpload(req.files.educationalCertificates[0]?.buffer, 'raw');
+            }
+            if (req.files.assetDeclaration) {
+                candidate.assetDeclaration = await fileUpload(req.files.assetDeclaration[0]?.buffer, 'raw');
+            }
+            if (req.files.profilePicture) {
+                candidate.profilePicture = await fileUpload(req.files.profilePicture[0]?.buffer, 'image');
+            }
+        }
 
         console.log('Attempting to save the candidate...');
         await candidate.save();

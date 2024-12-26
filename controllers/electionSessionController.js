@@ -119,6 +119,74 @@ exports.scheduleElectionSession = async (req, res) => {
     }
 };
 
+exports.performElectionSessionInit = async (req, res) => {
+    console.log('/performElectionSessionInit invoked')
+    const { electionSessionId } = req.body;
+    if (electionSessionId) {
+        try {
+            const electionSession = await ElectionSession.findById(electionSessionId);
+            if (electionSession) {
+                try {
+                    // 1. Attempt to fetch existing session from blockchain
+                    const accountData = await program.account.votingSession.fetch(electionSession.electionSessionPublicKey);
+
+                    // 2. If successful, return the existing session
+                    electionSession.name = accountData.name;
+                    electionSession.status = accountData.status;
+
+                    await electionSession.save();
+
+                    console.log('Election Session exists on the blockchain, synchronized.')
+
+                    return res.status(200).json({
+                        message: 'Election Session Synchronized.'
+                    });
+                } catch (fetchError) {
+                    console.warn("Session not found on blockchain, initializing...");
+
+                    // 3. Initialize the session if fetch fails
+                    try {
+                        const electionSessionKeypair = Keypair.generate();
+
+                        const tx = await program.rpc.initializeVotingSession(
+                            electionSession.name,
+                            {
+                                accounts: {
+                                    votingSession: electionSessionKeypair.publicKey,
+                                    signer: provider.wallet.publicKey,
+                                    systemProgram: anchor.web3.SystemProgram.programId,
+                                },
+                                signers: [provider.wallet.payer, electionSessionKeypair],
+                            }
+                        );
+
+                        // 4. Update MongoDB with new public key
+                        electionSession.electionSessionPublicKey = electionSessionKeypair.publicKey.toString();
+                        await electionSession.save();
+
+                        return res.status(201).json({
+                            message: "Election session initialized successfully",
+                            transaction: tx,
+                            publicKey: electionSessionKeypair.publicKey.toString(),
+                        });
+                    } catch (txError) {
+                        console.error("Failed to initialize session:", txError.message);
+                        res.status(500).json({ message: "Transaction failed", error: txError });
+                    }
+                }
+            } else {
+                return res.status(404).json({ message: "Election session not found in database" });
+            }
+        } catch (dbError) {
+            console.error("MongoDB Error:", dbError.message);
+            return res.status(500).json({ message: "Internal Server Error", error: dbError });
+        }
+    } else {
+        return res.status(400).json({ message: "Election Session ID is required" });
+    }
+};
+
+
 
 exports.configureElectionSession = async (req, res) => {
     console.log('/configure-election-session accessed', req.body);

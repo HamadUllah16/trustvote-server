@@ -128,14 +128,14 @@ const castAVote = async (req, res) => {
 
             console.log("Candidate Public Key: ", candidate.publicKey);
 
-            if (user && candidate && votingSessionPublicKey) {
+            if (user && candidate && electionSession) {
                 const voteAccountKeypair = Keypair.generate();
                 let tx;
                 if (candidate.constituencyType === 'national assembly' && user.naVote) {
-                    tx = castVote(id, candidateId, voteAccountKeypair, candidate, votingSessionPublicKey);
+                    tx = await castVote(user.userId, voteAccountKeypair, candidate, electionSession.electionSessionPublicKey);
                 }
                 else if (candidate.constituencyType === 'provincial assembly' && user.paVote) {
-                    tx = castVote(id, candidateId, voteAccountKeypair, candidate, votingSessionPublicKey);
+                    tx = await castVote(user.userId, candidateId, voteAccountKeypair, candidate, electionSession.electionSessionPublicKey);
                 }
                 else {
                     console.error('Voter does not have any remaining votes in this constituency type.');
@@ -143,8 +143,9 @@ const castAVote = async (req, res) => {
                 }
 
                 if (tx) {
+                    console.log("Transaction: ", tx)
 
-                    const voteAccount = await VoteAccount.create({ candidatePublicKey: candidate.publicKey, voterId: id, voteAccountPublicKey: voteAccountKeypair.publicKey, votingSessionPublicKey, candidateId })
+                    const voteAccount = await VoteAccount.create({ tx, candidatePublicKey: candidate.publicKey, voterId: id, voteAccountPublicKey: voteAccountKeypair.publicKey, votingSessionPublicKey, candidateId })
 
                     candidate.votes[0].voters.push(user._id);
                     if (candidate.constituencyType === 'national assembly') {
