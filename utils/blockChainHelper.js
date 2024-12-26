@@ -5,7 +5,7 @@ const anchor = require('@project-serum/anchor');
 async function pushCandidateToBlockchain(candidate) {
     try {
         const candidateKeypair = Keypair.generate();
-        const tx = await program.rpc.initializeCandidate(candidate.candidateId, candidate.firstName + ' ' + candidate.lastName, candidate.partyAffiliation, {
+        const tx = await program.rpc.initializeCandidate(candidate.candidateId, {
             accounts: {
                 data: candidateKeypair.publicKey,
                 user: provider.wallet.publicKey,
