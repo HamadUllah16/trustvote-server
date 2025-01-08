@@ -15,7 +15,7 @@ const electionSessionSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['active', 'inactive', 'paused'],
+        enum: ['active', 'ended', 'paused', 'scheduled'],
         required: true
     }
 }, { timestamps: true })
