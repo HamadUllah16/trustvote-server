@@ -140,6 +140,7 @@ CandidateSchema.pre('save', function (next) {
         candidate.codeOfConduct
     ) {
         candidate.profileCompletion = true;
+        candidate.status = candidate.status === 'verified' ? 'verified' : 'pending';
     } else {
         candidate.profileCompletion = false;
         candidate.status = 'unverified'
