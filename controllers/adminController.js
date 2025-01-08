@@ -80,7 +80,7 @@ exports.adminProfile = async (req, res) => {
 };
 exports.getApprovedCandidates = async (req, res) => {
   try {
-    const candidates = await Candidate.find({ status: 'approved' }, { password: 0, createdAt: 0, updatedAt: 0, votes: 0 })
+    const candidates = await Candidate.find({ status: 'verified' }, { password: 0, createdAt: 0, updatedAt: 0, votes: 0 })
     res.status(200).json({ candidates, message: 'Approved candidates fetched.' })
   } catch (error) {
     console.error('Error getting approved candidates.', error)

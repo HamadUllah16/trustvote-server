@@ -142,6 +142,7 @@ CandidateSchema.pre('save', function (next) {
         candidate.profileCompletion = true;
     } else {
         candidate.profileCompletion = false;
+        candidate.status = 'unverified'
     }
 
     next();

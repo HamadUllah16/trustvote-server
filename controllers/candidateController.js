@@ -76,7 +76,7 @@ exports.completeCandidateProfile = async (req, res) => {
     ];
 
     console.log('Request params:', req.params);
-    console.log('Request body:', req.body);
+    console.dir('Request body:', req.body);
 
     try {
         console.log(`Finding candidate with ID: ${id}`);
@@ -93,6 +93,10 @@ exports.completeCandidateProfile = async (req, res) => {
                 candidate[field] = req.body[field];
             }
         });
+
+        if (candidate.profileCompletion && candidate.status === 'unverified') {
+            candidate.status === 'pending'
+        }
 
         // Upload files if they exist in the request
         if (req.files) {
@@ -211,7 +215,7 @@ exports.myCandidates = async (req, res) => {
 
         console.log(user.constituency)
 
-        const candidates = await Candidate.find({ constituency: user.constituency, status: 'approved' });
+        const candidates = await Candidate.find({ constituency: user.constituency, status: 'verified' });
         console.log(candidates);
 
         return res.status(200).json({ message: 'Relevant candidates fetched.', candidates });
@@ -233,7 +237,7 @@ exports.myProvincialCandidates = async (req, res) => {
             return res.status(404).json({ message: 'User not found.' })
         }
 
-        const candidates = await Candidate.find({ constituency: user.provincialConstituency, status: 'approved' });
+        const candidates = await Candidate.find({ constituency: user.provincialConstituency, status: 'verified' });
 
         if (candidates) {
             return res.status(200).json({ message: 'Provincial Candidates fetched', candidates })
@@ -253,7 +257,7 @@ exports.candidatesOfConstituency = async (req, res) => {
         const electionSession = await ElectionSession.findById(electionSessionId);
         if (electionSession) {
             if (constituency) {
-                const candidates = await Candidate.find({ constituency, status: 'approved' });
+                const candidates = await Candidate.find({ constituency, status: 'verified' });
 
                 if (candidates) {
                     console.log('Candidates based off constituency fetched.', candidates);
