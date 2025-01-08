@@ -71,7 +71,7 @@ exports.scheduleElectionSession = async (req, res) => {
             }
 
             // create a new election session object for all candidates
-            const allCandidates = await Candidate.find({ status: 'approved' });
+            const allCandidates = await Candidate.find({ status: 'verified' });
             for (const candidate of allCandidates) {
                 candidate.votes.unshift({ electionSessionId: electionSession._id, voters: [] });
                 await candidate.save();
@@ -97,7 +97,7 @@ exports.scheduleElectionSession = async (req, res) => {
 
 
                     // push all verified candidates to blockchain
-                    const allCandidates = await Candidate.find({ status: 'approved' });
+                    const allCandidates = await Candidate.find({ status: 'verified' });
                     allCandidates.map((candidate) => {
                         pushCandidateToBlockchain(candidate)
                     })
